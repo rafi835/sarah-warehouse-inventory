@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarah's Warehouse Inventory</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        nav {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+            display: inline-block;
+            border: none;
+        }
+
+        nav a:hover {
+            background: #764ba2;
+        }
+
+        nav a.active {
+            background: #764ba2;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input.error {
+            border-color: #e74c3c;
+            background-color: #fadbd8;
+        }
+
+        .form-group .error-message {
+            color: #e74c3c;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+        }
+
+        .form-group .error-message.show {
+            display: block;
+        }
+
+        .form-group .success-message {
+            color: #27ae60;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+            font-weight: bold;
+        }
+
+        .form-group .success-message.show {
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button.add-btn {
+            flex: 1;
+            min-width: 150px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+
+        button.add-btn:hover:not(:disabled) {
+            background: #229954;
+        }
+
+        button.add-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        button.clear-all-btn {
+            flex: 1;
+            min-width: 150px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        button.clear-all-btn:hover {
+            background: #c0392b;
+        }
+
+        button.clear-all-btn:active {
+            transform: scale(0.98);
+        }
+
+        .inventory-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .item-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .item-card.low-stock {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .item-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .item-quantity {
+            font-size: 2em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .low-stock-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .item-actions button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        .increase-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .decrease-btn {
+            background: #f39c12;
+            color: white;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .item-actions button:hover {
+            opacity: 0.8;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .chart-legend {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 0 15px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            vertical-align: middle;
+            border-radius: 2px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state p {
+            font-size: 1.1em;
+        }
+
+        footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #ddd;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            animation: slideUp 0.3s;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content h2 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .modal-content p {
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .modal-cancel-btn {
+            background: #bdc3c7;
+            color: white;
+        }
+
+        .modal-cancel-btn:hover {
+            background: #95a5a6;
+        }
+
+        .modal-confirm-btn {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .modal-confirm-btn:hover {
+            background: #c0392b;
+        }
+
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .inventory-header h2 {
+            color: #667eea;
+            margin: 0;
+        }
+
+        .validation-rules {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .validation-rules h4 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        .validation-rules ul {
+            list-style-position: inside;
+            color: #333;
+        }
+
+        .validation-rules li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            nav { flex-direction: column; gap: 10px; }
+            nav a { width: 100%; }
+            .inventory-list { grid-template-columns: 1fr; }
+            .button-group { flex-direction: column; }
+            .button-group button { width: 100%; min-width: auto; }
+            .inventory-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Sarah's Warehouse Inventory</h1>
+            <p>Professional Inventory Management System</p>
+        </header>
+
+        <nav>
+            <a href="index.html" onclick="return true">🏠 Home</a>
+            <a href="about.html" onclick="return true">ℹ️ About</a>
+        </nav>
+
+        <div class="content">
+            <div class="form-section">
+                <h2>Add New Item</h2>
+                
+                <div class="validation-rules">
+                    <h4>📋 Input Validation Rules:</h4>
+                    <ul>
+                        <li>✓ Item name: Must be unique (no duplicates allowed)</li>
+                        <li>✓ Item name: Only letters, numbers, spaces, and hyphens allowed</li>
+                        <li>✓ Quantity: Only positive whole numbers accepted</li>
+                        <li>✓ Quantity: Cannot be zero, negative, or contain letters</li>
+                    </ul>
+                </div>
+
+                <div class="form-group">
+                    <label for="itemName">Item Name:</label>
+                    <input type="text" id="itemName" placeholder="e.g., Widget A, Box B..." autocomplete="off">
+                    <div class="error-message" id="nameErrorMsg"></div>
+                    <div class="success-message" id="nameSuccessMsg"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemQuantity">Quantity:</label>
+                    <input type="number" id="itemQuantity" placeholder="e.g., 100" min="1" step="1" autocomplete="off">
+                    <div class="error-message" id="quantityErrorMsg"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="add-btn" id="addBtn" onclick="addItem()">➕ Add Item</button>
+                    <button class="clear-all-btn" onclick="openClearModal()">🗑️ Clear All Items</button>
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalItems">0</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalQuantity">0</div>
+                    <div class="stat-label">Total Quantity</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="averageQuantity">0</div>
+                    <div class="stat-label">Avg Quantity</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lowStockCount">0</div>
+                    <div class="stat-label">⚠️ Low Stock Items</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Inventory Quantities</h3>
+                <canvas id="inventoryChart"></canvas>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(102, 126, 234, 0.7);"></span>
+                        <span>Normal Stock</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(231, 76, 60, 0.7);"></span>
+                        <span>Low Stock (&lt;10)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="inventory-header">
+                <h2>Inventory Items</h2>
+            </div>
+            <div id="inventoryList" class="inventory-list">
+                <div class="empty-state">
+                    <p>No items yet. Add an item to get started!</p>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Sarah's Warehouse Inventory System. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <div id="clearModal" class="modal">
+        <div class="modal-content">
+            <h2>🗑️ Clear All Items?</h2>
+            <p>Are you sure you want to delete all items from your inventory? This action <strong>cannot be undone</strong> and all data will be permanently removed from localStorage.</p>
+            <div class="modal-buttons">
+                <button class="modal-cancel-btn" onclick="closeClearModal()">Cancel</button>
+                <button class="modal-confirm-btn" onclick="confirmClearAll()">Yes, Delete All</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chart = null;
+
+        function init() {
+            loadFromLocalStorage();
+            renderInventory();
+            updateStats();
+            setupValidation();
+        }
+
+        function setupValidation() {
+            const itemNameInput = document.getElementById('itemName');
+            const itemQuantityInput = document.getElementById('itemQuantity');
+
+            if (!itemNameInput || !itemQuantityInput) return;
+
+            itemNameInput.addEventListener('input', function(e) {
+                validateItemName(this.value);
+            });
+
+            itemNameInput.addEventListener('blur', function() {
+                clearErrorMessage('nameErrorMsg');
+                clearErrorMessage('nameSuccessMsg');
+            });
+
+            itemQuantityInput.addEventListener('input', function(e) {
+                validateQuantity(this.value);
+            });
+
+            itemQuantityInput.addEventListener('blur', function() {
+                clearErrorMessage('quantityErrorMsg');
+            });
+
+            itemQuantityInput.addEventListener('keypress', function(e) {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        function validateItemName(name) {
+            const nameErrorMsg = document.getElementById('nameErrorMsg');
+            const nameSuccessMsg = document.getElementById('nameSuccessMsg');
+            const itemNameInput = document.getElementById('itemName');
+            
+            if (!nameErrorMsg || !nameSuccessMsg || !itemNameInput) return;
+
+            clearErrorMessage('nameErrorMsg');
+            clearErrorMessage('nameSuccessMsg');
+            itemNameInput.classList.remove('error');
+
+            if (!name.trim()) return;
+
+            const validNamePattern = /^[a-zA-Z0-9\s\-]+$/;
+            if (!validNamePattern.test(name)) {
+                showErrorMessage('nameErrorMsg', '❌ Only letters, numbers, spaces, and hyphens are allowed');
+                itemNameInput.classList.add('error');
+                return;
+            }
+
+            const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            const isDuplicate = inventory.some(item => 
+                item.name.toLowerCase() === name.trim().toLowerCase()
+            );
+
+            if (isDuplicate) {
+                showErrorMessage('nameErrorMsg', '❌ This item already exists! Item names must be unique');
+                itemNameInput.classList.add('error');
+                return;
+            }
+
+            showSuccessMessage('nameSuccessMsg', '✓ Item name is valid');
+        }
+
+        function validateQuantity(value) {
+            const quantityErrorMsg = document.getElementById('quantityErrorMsg');
+            const itemQuantityInput = document.getElementById('itemQuantity');
+            
+            if (!quantityErrorMsg || !itemQuantityInput) return;
+
+            clearErrorMessage('quantityErrorMsg');
+            itemQuantityInput.classList.remove('error');
+
+            if (value === '' || value === undefined) return;
+
+            const quantity = parseInt(value);
+
+            if (isNaN(quantity) || !Number.isInteger(quantity)) {
+                showErrorMessage('quantityErrorMsg', '❌ Quantity must be a whole number');
+                itemQuantityInput.classList.add('error');
+                return;
+            }
+
+            if (quantity < 0) {
+                showErrorMessage('quantityErrorMsg', '❌ Quantity cannot be negative');
+                itemQuantityInput.classList.add('error');
+                return;
+            }
+
+            if (quantity === 0) {
+                showErrorMessage('quantityErrorMsg', '❌ Quantity must be at least 1');
+                itemQuantityInput.classList.add('error');
+                return;
+            }
+        }
+
+        function showErrorMessage(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.classList.add('show');
+            }
+        }
+
+        function showSuccessMessage(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.classList.add('show');
+            }
+        }
+
+        function clearErrorMessage(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = '';
+                element.classList.remove('show');
+            }
+        }
+
+        function addItem() {
+            const itemNameInput = document.getElementById('itemName');
+            const itemQuantityInput = document.getElementById('itemQuantity');
+
+            if (!itemNameInput || !itemQuantityInput) return;
+
+            const name = itemNameInput.value.trim();
+            const quantityValue = itemQuantityInput.value;
+
+            if (!name) {
+                showErrorMessage('nameErrorMsg', '⚠️ Please enter an item name');
+                itemNameInput.classList.add('error');
+                return;
+            }
+
+            validateItemName(name);
+            const nameError = document.getElementById('nameErrorMsg');
+            if (nameError && nameError.classList.contains('show')) {
+                itemNameInput.classList.add('error');
+                return;
+            }
+
+            if (quantityValue === '' || quantityValue === undefined) {
+                showErrorMessage('quantityErrorMsg', '⚠️ Please enter a quantity');
+                itemQuantityInput.classList.add('error');
+                return;
+            }
+
+            const quantity = parseInt(quantityValue);
+
+            if (isNaN(quantity) || quantity < 1) {
+                showErrorMessage('quantityErrorMsg', '❌ Quantity must be a positive whole number');
+                itemQuantityInput.classList.add('error');
+                return;
+            }
+
+            validateQuantity(quantityValue);
+            const quantityError = document.getElementById('quantityErrorMsg');
+            if (quantityError && quantityError.classList.contains('show')) {
+                itemQuantityInput.classList.add('error');
+                return;
+            }
+
+            const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            const isDuplicate = inventory.some(item => 
+                item.name.toLowerCase() === name.toLowerCase()
+            );
+
+            if (isDuplicate) {
+                showErrorMessage('nameErrorMsg', '❌ This item already exists!');
+                itemNameInput.classList.add('error');
+                return;
+            }
+
+            inventory.push({ id: Date.now(), name, quantity });
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            
+            itemNameInput.value = '';
+            itemQuantityInput.value = '';
+            clearErrorMessage('nameErrorMsg');
+            clearErrorMessage('nameSuccessMsg');
+            clearErrorMessage('quantityErrorMsg');
+            itemNameInput.classList.remove('error');
+            itemQuantityInput.classList.remove('error');
+
+            loadFromLocalStorage();
+            renderInventory();
+            updateStats();
+
+            const addBtn = document.getElementById('addBtn');
+            const originalText = addBtn.textContent;
+            addBtn.textContent = '✓ Item Added!';
+            addBtn.style.background = '#27ae60';
+            setTimeout(() => {
+                addBtn.textContent = originalText;
+                addBtn.style.background = '';
+            }, 2000);
+        }
+
+        function increaseQuantity(id) {
+            const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            const item = inventory.find(item => item.id === id);
+            if (item) {
+                item.quantity++;
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                loadFromLocalStorage();
+                renderInventory();
+                updateStats();
+            }
+        }
+
+        function decreaseQuantity(id) {
+            const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            const item = inventory.find(item => item.id === id);
+            if (item && item.quantity > 1) {
+                item.quantity--;
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                loadFromLocalStorage();
+                renderInventory();
+                updateStats();
+            }
+        }
+
+        function deleteItem(id) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+                inventory = inventory.filter(item => item.id !== id);
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                loadFromLocalStorage();
+                renderInventory();
+                updateStats();
+            }
+        }
+
+        function openClearModal() {
+            const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            if (inventory.length === 0) {
+                alert('No items to clear!');
+                return;
+            }
+            document.getElementById('clearModal').classList.add('active');
+        }
+
+        function closeClearModal() {
+            document.getElementById('clearModal').classList.remove('active');
+        }
+
+        function confirmClearAll() {
+            localStorage.setItem('inventory', JSON.stringify([]));
+            loadFromLocalStorage();
+            renderInventory();
+            updateStats();
+            closeClearModal();
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('clearModal');
+            if (event.target === modal) {
+                closeClearModal();
+            }
+        }
+
+        function loadFromLocalStorage() {
+            window.inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+        }
+
+        function isLowStock(quantity) {
+            return quantity < 10;
+        }
+
+        function renderInventory() {
+            const list = document.getElementById('inventoryList');
+            if (!list) return;
+            
+            if (window.inventory.length === 0) {
+                list.innerHTML = '<div class="empty-state"><p>No items yet. Add an item to get started!</p></div>';
+                if (chart) {
+                    chart.destroy();
+                    chart = null;
+                }
+                return;
+            }
+
+            list.innerHTML = window.inventory.map(item => `
+                <div class="item-card ${isLowStock(item.quantity) ? 'low-stock' : ''}">
+                    <div class="item-name">${escapeHtml(item.name)}</div>
+                    <div class="item-quantity">${item.quantity}</div>
+                    ${isLowStock(item.quantity) ? '<div class="low-stock-badge">⚠️ LOW STOCK</div>' : ''}
+                    <div class="item-actions">
+                        <button class="increase-btn" onclick="increaseQuantity(${item.id})">+</button>
+                        <button class="decrease-btn" onclick="decreaseQuantity(${item.id})">-</button>
+                        <button class="delete-btn" onclick="deleteItem(${item.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+
+            initChart();
+        }
+
+        function updateStats() {
+            const totalItems = window.inventory.length;
+            const totalQuantity = window.inventory.reduce((sum, item) => sum + item.quantity, 0);
+            const averageQuantity = totalItems > 0 ? Math.round(totalQuantity / totalItems) : 0;
+            const lowStockCount = window.inventory.filter(item => isLowStock(item.quantity)).length;
+
+            const totalItemsEl = document.getElementById('totalItems');
+            const totalQuantityEl = document.getElementById('totalQuantity');
+            const averageQuantityEl = document.getElementById('averageQuantity');
+            const lowStockCountEl = document.getElementById('lowStockCount');
+
+            if (totalItemsEl) totalItemsEl.textContent = totalItems;
+            if (totalQuantityEl) totalQuantityEl.textContent = totalQuantity;
+            if (averageQuantityEl) averageQuantityEl.textContent = averageQuantity;
+            if (lowStockCountEl) lowStockCountEl.textContent = lowStockCount;
+        }
+
+        function getBarColor(quantity, index) {
+            if (isLowStock(quantity)) {
+                return {
+                    backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                    borderColor: 'rgba(231, 76, 60, 1)'
+                };
+            }
+            
+            const colors = [
+                { bg: 'rgba(102, 126, 234, 0.7)', border: 'rgba(102, 126, 234, 1)' },
+                { bg: 'rgba(118, 75, 162, 0.7)', border: 'rgba(118, 75, 162, 1)' },
+                { bg: 'rgba(39, 174, 96, 0.7)', border: 'rgba(39, 174, 96, 1)' },
+                { bg: 'rgba(241, 196, 15, 0.7)', border: 'rgba(241, 196, 15, 1)' },
+                { bg: 'rgba(52, 152, 219, 0.7)', border: 'rgba(52, 152, 219, 1)' },
+                { bg: 'rgba(155, 89, 182, 0.7)', border: 'rgba(155, 89, 182, 1)' }
+            ];
+            
+            return colors[index % colors.length];
+        }
+
+        function initChart() {
+            if (window.inventory.length === 0) return;
+
+            const ctx = document.getElementById('inventoryChart');
+            if (!ctx) return;
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            const backgroundColors = window.inventory.map((item, index) => 
+                getBarColor(item.quantity, index).backgroundColor
+            );
+            const borderColors = window.inventory.map((item, index) => 
+                getBarColor(item.quantity, index).borderColor
+            );
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: window.inventory.map(item => item.name),
+                    datasets: [{
+                        label: 'Quantity',
+                        data: window.inventory.map(item => item.quantity),
+                        backgroundColor: backgroundColors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
